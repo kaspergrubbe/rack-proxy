@@ -1,8 +1,4 @@
-require "net_http_hacked"
-require "rack/http_streaming_response"
-
 module Rack
-
   # Subclass and bring your own #rewrite_request and #rewrite_response
   class Proxy
     VERSION = "0.6.5"
@@ -103,23 +99,14 @@ module Rack
       read_timeout = env.delete('http.read_timeout') || @read_timeout
 
       # Create the response
-      if @streaming
-        # streaming response (the actual network communication is deferred, a.k.a. streamed)
-        target_response = HttpStreamingResponse.new(target_request, backend.host, backend.port)
-        target_response.use_ssl = use_ssl
-        target_response.read_timeout = read_timeout
-        target_response.verify_mode = OpenSSL::SSL::VERIFY_NONE if use_ssl && ssl_verify_none
-        target_response.ssl_version = @ssl_version if @ssl_version
-      else
-        http = Net::HTTP.new(backend.host, backend.port)
-        http.use_ssl = use_ssl if use_ssl
-        http.read_timeout = read_timeout
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE if use_ssl && ssl_verify_none
-        http.ssl_version = @ssl_version if @ssl_version
+      http = Net::HTTP.new(backend.host, backend.port)
+      http.use_ssl = use_ssl if use_ssl
+      http.read_timeout = read_timeout
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if use_ssl && ssl_verify_none
+      http.ssl_version = @ssl_version if @ssl_version
 
-        target_response = http.start do
-          http.request(target_request)
-        end
+      target_response = http.start do
+        http.request(target_request)
       end
 
       headers = self.class.normalize_headers(target_response.respond_to?(:headers) ? target_response.headers : target_response.to_hash)
@@ -129,6 +116,7 @@ module Rack
       # According to https://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-14#section-7.1.3.1Acc
       # should remove hop-by-hop header fields
       headers.reject! { |k| ['connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailer', 'transfer-encoding', 'upgrade'].include? k.downcase }
+
       [target_response.code, headers, body]
     end
 
