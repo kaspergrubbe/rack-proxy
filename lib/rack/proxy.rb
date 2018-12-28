@@ -96,8 +96,14 @@ module Rack
       ssl_verify_none = (env.delete('rack.ssl_verify_none') || @ssl_verify_none) == true
       read_timeout = env.delete('http.read_timeout') || @read_timeout
 
+      port = if use_ssl
+        443
+      else
+        80
+      end
+
       # Create the response
-      http = Net::HTTP.new(source_request.host, source_request.port)
+      http = Net::HTTP.new(source_request.host, port)
       http.use_ssl = use_ssl if use_ssl
       http.read_timeout = read_timeout
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE if use_ssl && ssl_verify_none
