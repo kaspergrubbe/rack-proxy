@@ -44,7 +44,6 @@ module Rack
       end
       @streaming = opts.fetch(:streaming, true)
       @ssl_verify_none = opts.fetch(:ssl_verify_none, false)
-      @backend = URI(opts[:backend]) if opts[:backend]
       @read_timeout = opts.fetch(:read_timeout, 60)
       @ssl_version = opts[:ssl_version] if opts[:ssl_version]
       @username = opts[:username] if opts[:username]
@@ -93,13 +92,18 @@ module Rack
       # Use basic auth if we have to
       target_request.basic_auth(@username, @password) if @username && @password
 
-      backend = env.delete('rack.backend') || @backend || source_request
-      use_ssl = backend.scheme == "https"
+      use_ssl = source_request.scheme == "https"
       ssl_verify_none = (env.delete('rack.ssl_verify_none') || @ssl_verify_none) == true
       read_timeout = env.delete('http.read_timeout') || @read_timeout
 
+      port = if use_ssl
+        443
+      else
+        80
+      end
+
       # Create the response
-      http = Net::HTTP.new(backend.host, backend.port)
+      http = Net::HTTP.new(source_request.host, port)
       http.use_ssl = use_ssl if use_ssl
       http.read_timeout = read_timeout
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE if use_ssl && ssl_verify_none
