@@ -56,7 +56,7 @@ module Rack
     end
 
     def call(env)
-      rewrite_response(perform_request(rewrite_env(env)))
+      perform_request(rewrite_env(env))
     end
 
     # Return modified env
