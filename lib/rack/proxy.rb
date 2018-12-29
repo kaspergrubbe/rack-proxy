@@ -97,7 +97,7 @@ module Rack
       read_timeout = env.delete('http.read_timeout') || @read_timeout
 
       # Create the response
-      http = Net::HTTP.new(source_request.host, source_request.port)
+      http = Net::HTTP.new(source_request.host, 80)
       http.use_ssl = use_ssl if use_ssl
       http.read_timeout = read_timeout
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE if use_ssl && ssl_verify_none
