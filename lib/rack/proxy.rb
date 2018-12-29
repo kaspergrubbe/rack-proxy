@@ -92,7 +92,7 @@ module Rack
       # Use basic auth if we have to
       target_request.basic_auth(@username, @password) if @username && @password
 
-      use_ssl = source_request.port == 443
+      use_ssl = false
       ssl_verify_none = (env.delete('rack.ssl_verify_none') || @ssl_verify_none) == true
       read_timeout = env.delete('http.read_timeout') || @read_timeout
 
